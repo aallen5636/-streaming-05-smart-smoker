@@ -139,5 +139,8 @@ if __name__ == "__main__":
     queue2 = '02-food-A'
     queue3 = '02-food-B'
 
-    # send the message to the queue
-    send_message('localhost',queue1, queue2, queue3,'smoker-temps.csv')
+ #send_message("localhost","task_queue_smoker",message1)
+    send_message("localhost","task_queue_food_a",message2)
+    send_message("localhost","task_queue_food_b",message3)
+ # sleep for the sleep_time indicated above
+    time.sleep(sleep_time)
