@@ -1,17 +1,11 @@
 """
-Author: Sammie Bever
-Date: February 3, 2023 
-Class: Streaming Data 
-Assignment: Module 05 
-
-This program uses producers and task queues (RabbitMQ).
-It reads data from the smoker-temps.csv file for smart smokers.
-
-To-Do List:
-- change sleep time
+This program reads in a csv file and for each row sends 
+    three different messages to three different queues on the RabbitMQ server.
+    
+    Author: Ashley Allen
+    Date: Feb 8, 2023
 
 """
-########################################################
 
 # import python modules
 import pika
@@ -21,7 +15,6 @@ import csv
 # import socket
 import time
 
-########################################################
 
 # define variables/constants/options
 host = "localhost"
@@ -35,7 +28,6 @@ show_offer = True # (RabbitMQ Server option - T=on, F=off)
 # socket_family = socket.AF_INET 
 # socket_type = socket.SOCK_DGRAM
 
-########################################################
 
 # define functions
 ## define option to open RabbitMQ admin webpage
@@ -165,7 +157,6 @@ def get_message_from_csv(input_file):
         # slowly read a row every 1 seconds from file
         time.sleep(1)        
 
-########################################################
 
 # Run program
 if __name__ == "__main__":  
