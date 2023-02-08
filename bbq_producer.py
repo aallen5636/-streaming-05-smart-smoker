@@ -72,8 +72,8 @@ def offer_Queueclear(Queueclear):
             ch = conn.channel()
             #delete the queues
             ch.queue_delete("01-smoker")
-            ch.queue_delete("02-food-A")
-            ch.queue_delete("03-food-B")
+            ch.queue_delete("02-Food-A")
+            ch.queue_delete("03-Food-B")
             print("Queue cleared!")
 
 offer_Queueclear(Queueclear)
@@ -89,17 +89,18 @@ with open("smoker-temps.csv",'r') as file:
         #Read smoker reading and store it
         smokertemp=f"{row[1]}"
         #Read Food A reading and store it
-        foodA=f"{row[2]}"
+        FoodA=f"{row[2]}"
         #Read Food B reading and store it
-        foodB=f"{row[3]}"
+        FoodB=f"{row[3]}"
         #Set up messages 
         smoker_message=f"{fstringtime},{smokertemp}"
-        foodA_message=f"{fstringtime},{FoodA}"
-        foodB_message=f"{fstringtime},{FoodB}"
+        FoodA_message=f"{fstringtime},{FoodA}"
+        FoodB_message=f"{fstringtime},{FoodB}"
         #Get those messages rolling out!
         send_message(host,"01-smoker",smoker_message)
-        send_message(host,"02-food-A",FoodA_message)
-        send_message(host,"03-food-B",FoodB_message)
+        send_message(host,"02-Food-A",FoodA_message)
+        send_message(host,"03-Food-B",FoodB_message)
+        
         #Slow down the output to one message every 30 seconds
         time.sleep(30)
 
