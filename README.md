@@ -59,3 +59,5 @@ Simulate a streaming series of temperature readings from our smart smoker and tw
 
 Screenshot in Anaconda Prompt
 
+https://github.com/aallen5636/streaming-05-smart-smoker/blob/main/Terminal.png?raw=true![image](https://user-images.githubusercontent.com/95989498/218274061-df6a7e53-78f3-40d2-966c-edfe2e084684.png)
+
