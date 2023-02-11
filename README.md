@@ -25,7 +25,7 @@ Channel2 = Food A Temp
 Channe3 = Food B Temp
 Assignment - Smart Smoker
 
-##Using a Barbeque Smoker
+## Using a Barbeque Smoker
 
 When running a barbeque smoker, we monitor the temperatures of the smoker and the food to ensure everything turns out tasty. Over long cooks, the following events can happen:
 
