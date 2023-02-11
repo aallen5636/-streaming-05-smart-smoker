@@ -9,7 +9,7 @@
 1. View / Command Palette - then Python: Select Interpreter
 1. Select your conda environment. 
 
-##How to run this program:
+## How to run this program:
 
 Files ton hat needs to be used:
 
@@ -31,11 +31,11 @@ When running a barbeque smoker, we monitor the temperatures of the smoker and th
 
 The smoker temperature can suddenly decline.
 
-##Sensors
+## Sensors
 
 We have temperature sensors track temperatures and record them to generate a history of both (a) the smoker and (b) the food over time. These readings are an example of time-series data, and are considered streaming data or data in motion.
 
-##Streaming Data
+## Streaming Data
 
 Our thermometer records three temperatures every thirty seconds (two readings every minute). The three temperatures are:
 
@@ -44,18 +44,18 @@ the temperature of the first of two foods, Food A.
 the temperature for the second of two foods, Food B.
 Significant Events
 
-##We want know if:
+## We want know if:
 
 The smoker temperature decreases by more than 15 degrees F in 2.5 minutes (smoker alert!) Any food temperature changes less than 1 degree F in 10 minutes 
 
-##Smart System
+## Smart System
 
 Python:
 
 Simulate a streaming series of temperature readings from our smart smoker and two foods. Create a producer to send these temperature readings to RabbitMQ. Create three consumer processes, each one monitoring one of the temperature streams. Perform calculations to determine if a significant event has occurred.
 
 
-##Screenshots of Program Running:
+## Screenshots of Program Running:
 
 Screenshot in Anaconda Prompt
 
