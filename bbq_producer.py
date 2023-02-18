@@ -1,3 +1,8 @@
+"""
+Author: Ashley Allen
+Date: January 31, 2023
+---------
+
 import pika
 import sys
 import webbrowser
