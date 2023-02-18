@@ -1,8 +1,3 @@
-## Loni Wood
-## February 8, 2023
-## Module 5 Assignment
-
-
 import pika
 import sys
 import webbrowser
@@ -144,3 +139,4 @@ if __name__ == "__main__":
     delete_queue(host, food_b_temp_queue)
     
     get_data_from_csv(data_file)
+    
