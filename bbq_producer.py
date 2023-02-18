@@ -1,12 +1,9 @@
 """
-Author: Sammie Bever
-Date: February 3, 2023 
-Class: Streaming Data 
-Assignment: Module 05 
-This program creates a producer and multiple task queues (RabbitMQ).
+This program creates a consumer and multiple task queues (RabbitMQ).
 It reads data from the smoker-temps.csv file for smart smokers.
-Items to update prior to final submission:
-- sleep time = 30 secs
+## Author : Elsa Ghirmazion
+Date: February 15, 2023 
+Class: Streaming Data Module 06 
 """
 ########################################################
 
@@ -16,7 +13,7 @@ import sys
 import webbrowser
 import csv
 import time
-
+from collections import deque
 ########################################################
 
 # define variables/constants/options
@@ -135,7 +132,7 @@ def get_message_from_csv(input_file):
 
         # slowly read a row half minute (30 seconds)
         # can change this to 1 second for testing purposes - makes it go faster
-        time.sleep(1)        
+        time.sleep(30)        
 
 ########################################################
 
