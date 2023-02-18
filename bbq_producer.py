@@ -1,178 +1,146 @@
+## Loni Wood
+## February 8, 2023
+## Module 5 Assignment
+
+
 import pika
 import sys
-from collections import deque
+import webbrowser
+import csv
+import time
 
-# limited to 5 items (the 5 most recent readings)
-smoker_deque = deque(maxlen=5)
-# limited to 20 items (the 20 most recent readings)
-foodA_deque = deque(maxlen=20)
-# limited to 20 items (the 20 most recent readings)
-foodB_deque = deque(maxlen=20)
+#####################################################################################
 
-# define a callback function to be called when a message is received
-def smoker_callback(ch, method, properties, body):
-    """ Define behavior on getting a message about the smoker temperature."""
-    #define a list to place smoker temps initializing with 0
-    smokertemp = ['0']
-    #seperate the temp from the dat/time by using split
-    message = body.decode().split(",")
-    #assign the temp to a variable making it a float
-    smokertemp[0] = round(float(message[-1]),2)
-    # add the temp to the deque
-    smoker_deque.append(smokertemp[0])
-    #check to see that the deque has 5 items before analyzing
-    if len(smoker_deque) == 5:
-        # read rightmost item in deque and subtract from leftmost item in deque
-        #assign difference to a variable as a float rounded to 2
-        Smktempcheck = round(float(smoker_deque[-1]-smoker_deque[0]),2)
-        #if the temp has changed by 15 degress then an alert is sent
-        if Smktempcheck < -15:
-            print("Current smoker temp is:", smokertemp[0],";", "Smoker temp change in last 2.5 minutes is:", Smktempcheck)
-            print("smoker alert!")
-        #Show work in progress, letting the user know the changes
-        else:
-            print("Current smoker temp is:", smokertemp[0],";", "Smoker temp change in last 2.5 minutes is:", Smktempcheck)
-    else:
-        #if the deque has less than 5 items the current temp is printed
-        print("Current smoker temp is:", smokertemp[0])
-    # acknowledge the message was received and processed 
-    # (now it can be deleted from the queue)
-    ch.basic_ack(delivery_tag=method.delivery_tag)
+# define variables that will be used throughout
+host = "localhost"
+smoker_temp_queue = '01-smoker'
+food_a_temp_queue = '02-food-A'
+food_b_temp_queue = '02-food-B'
+data_file = 'smoker-temps.csv'
+show_offer = True #Define if you want to have the RabbitMQ Admit site opened, True = Y, False = N
 
-def foodA_callback(ch, method, properties, body):
-    """ Define behavior on getting a message about FoodA temperature."""
-    #define a list to place food A temps initializing with 0
-    foodatemp = ['0']
-    #seperate the temp from the dat/time by using split
-    message = body.decode().split(",")    
-    #assign the temp to a variable making it a float
-    foodatemp[0] = round(float(message[-1]),2)
-    # add the temp to the deque
-    foodA_deque.append(foodatemp[0])
-    #check to see that the deque has 5 items before analyzing
-    if len(foodA_deque) == 20:
-        # read rightmost item in deque and subtract from leftmost item in deque
-        #assign difference to a variable as a float rounded to 2
-        foodatempcheck = round(float(foodA_deque[-1]-foodA_deque[0]),2)
-        #if the temp has changed less than 1 degree then an alert is sent
-        if foodatempcheck < 1:
-            print("Current Food A temp is:", foodatemp[0],";", "Food A temp change in last 10 minutes is:", foodatempcheck)
-            print("food stall on food A!")
-        #Show work in progress, letting the user know the changes
-        else:
-            print("Current Food A temp is:", foodatemp[0],";","Food A temp change in last 10 minutes is:", foodatempcheck)
-    else:
-        #if the deque has less than 20 items the current temp is printed
-        print("Current Food A temp is:", foodatemp[0])
-    # acknowledge the message was received and processed 
-    # (now it can be deleted from the queue)
-    ch.basic_ack(delivery_tag=method.delivery_tag)
+######################################################################################
 
-def foodB_callback(ch, method, properties, body):
-    """ Define behavior on getting a message about FoodB temperature."""
-    #define a list to place food B temps initializing with 0
-    foodbtemp = ['0']
-    #seperate the temp from the dat/time by using split
-    message = body.decode().split(",")    
-    #assign the temp to a variable making it a float
-    foodbtemp[0] = round(float(message[-1]),2)
-    # add the temp to the deque
-    foodB_deque.append(foodbtemp[0])
-    #check to see that the deque has 5 items before analyzing
-    if len(foodB_deque) == 20:
-        # read rightmost item in deque and subtract from leftmost item in deque
-        #assign difference to a variable as a float rounded to 2
-        foodbtempcheck = round(float(foodB_deque[-1]-foodB_deque[0]),2)
-        #if the temp has changed less than 1 degree then an alert is sent
-        if foodbtempcheck < 1:
-            print("Current Food B temp is:", foodbtemp[0],";", "Food B temp change in last 10 minutes is:", foodbtempcheck)
-            print("food stall on food B!")
-        #Show work in progress, letting the user know the changes
-        else:
-            print("Current Food B temp is:", foodbtemp[0],";","Food B temp change in last 10 minutes is:", foodbtempcheck)
-    else:
-        #if the deque has less than 20 items the current temp is printed
-        print("Current Food B temp is:", foodbtemp[0])
-    # acknowledge the message was received and processed 
-    # (now it can be deleted from the queue)
-    ch.basic_ack(delivery_tag=method.delivery_tag)
+# define option to open rabbitmq admin site
+def offer_rabbitmq_admin_site(show_offer):
+    if show_offer == True:
+    
+        """Offer to open the RabbitMQ Admin website"""
+        ans = input("Would you like to monitor RabbitMQ queues? y or n ")
+        print()
+        if ans.lower() == "y":
+                webbrowser.open_new("http://localhost:15672/#/queues")
+                print()
 
-# define a main function to run the program
-def main(hn: str, queue1: str, queue2: str, queue3: str):
-    """ Continuously listen for task messages on a named queue."""
+##########################################################################################
 
-    # when a statement can go wrong, use a try-except block
+## define delete_queue
+def delete_queue(host: str, queue_name: str):
+    """
+    Delete queues each time we run the program to clear out old messages.
+    """
+    conn = pika.BlockingConnection(pika.ConnectionParameters(host))
+    ch = conn.channel()
+    ch.queue_delete(queue=queue_name)
+
+############################################################################################
+
+## define send message to the queue
+def send_message_to_queue(host: str, queue_name: str, message: str):
+    """
+    Creates and sends a message to the queue each execution.
+    This process runs and finishes.
+    Parameters:
+        host (str): the host name or IP address of the RabbitMQ server
+        queue_name (str): the name of the queue
+        message (str): the message to be sent to the queue
+    """
+
     try:
-        # try this code, if it works, keep going
         # create a blocking connection to the RabbitMQ server
-        connection = pika.BlockingConnection(pika.ConnectionParameters(host=hn))
-
-    # except, if there's an error, do this
-    except Exception as e:
-        print()
-        print("ERROR: connection to RabbitMQ server failed.")
-        print(f"Verify the server is running on host={hn}.")
-        print(f"The error says: {e}")
-        print()
-        sys.exit(1)
-
-    try:
+        conn = pika.BlockingConnection(pika.ConnectionParameters(host))
         # use the connection to create a communication channel
-        channel = connection.channel()
-
+        ch = conn.channel()
         # use the channel to declare a durable queue
-        # a durable queue will survive a RabbitMQ server restart
+        # a durable queue will survive a  server restart
         # and help ensure messages are processed in order
         # messages will not be deleted until the consumer acknowledges
-        channel.queue_declare(queue=queue1, durable=True)
-        channel.queue_declare(queue=queue2, durable=True)
-        channel.queue_declare(queue=queue3, durable=True)
-
-        # The QoS level controls the # of messages
-        # that can be in-flight (unacknowledged by the consumer)
-        # at any given time.
-        # Set the prefetch count to one to limit the number of messages
-        # being consumed and processed concurrently.
-        # This helps prevent a worker from becoming overwhelmed
-        # and improve the overall system performance. 
-        # prefetch_count = Per consumer limit of unaknowledged messages      
-        channel.basic_qos(prefetch_count=1) 
-
-        # configure the channel to listen on a specific queue,  
-        # use the callback function named callback,
-        # and do not auto-acknowledge the message (let the callback handle it)
-        channel.basic_consume(queue=queue1, auto_ack = False, on_message_callback=smoker_callback)
-        channel.basic_consume(queue=queue2, auto_ack = False, on_message_callback=foodA_callback)
-        channel.basic_consume(queue=queue3, auto_ack = False, on_message_callback=foodB_callback)
-
+        ch.queue_declare(queue=queue_name, durable=True)
+        # use the channel to publish a message to the queue
+        # every message passes through an exchange
+        ch.basic_publish(exchange="", routing_key=queue_name, body=message)
         # print a message to the console for the user
-        print(" [*] Ready for work. To exit press CTRL+C")
-
-        # start consuming messages via the communication channel
-        channel.start_consuming()
-
-    # except, in the event of an error OR user stops the process, do this
-    except Exception as e:
-        print()
-        print("ERROR: something went wrong.")
-        print(f"The error says: {e}")
+        print(f" [x] Sent {message} on {queue_name}")
+    except pika.exceptions.AMQPConnectionError as e:
+        print(f"Error: Connection to RabbitMQ server failed: {e}")
         sys.exit(1)
-    except KeyboardInterrupt:
-        print()
-        print(" User interrupted continuous listening process.")
-        sys.exit(0)
     finally:
-        print("\nClosing connection. Goodbye.\n")
-        # delete the queues when complete so unprocessed messages are cleared
-        channel.queue_delete(queue1)
-        channel.queue_delete(queue2)
-        channel.queue_delete(queue3)
-        connection.close()
+        # close the connection to the server
+        conn.close()
+    
+########################################################################################
+    
+# defining reading in file
+def get_data_from_csv(file):
+   
+    #Define main body function
+    file =  open(data_file,"r")
+    # create a csv reader for our comma delimited data
+    reader = csv.reader(file, delimiter=",")
+    
+    # skipping header row
+    next(reader)
+    
 
+    for row in reader:
+        fstring_time_column = f"{row[0]}"
+    
+    # since of of the columns are numbers, converting them to floats
+    # convert to float       
+        try:
+            smoker_temp_channel1 = float(row[1])
+            fstring_smoker_message = f"[{fstring_time_column}, {smoker_temp_channel1}]"
+            smoker_temp_message = fstring_smoker_message.encode()
+            send_message_to_queue(host, smoker_temp_queue, smoker_temp_message)
+        except ValueError:
+            pass
+        
+       
+        try:
+            food_a_temp_channel2 = float(row[2])
+            fstring_food_a_message = f"[{fstring_time_column}, {food_a_temp_channel2}]"
+            food_a_temp_message = fstring_food_a_message.encode()
+            send_message_to_queue(host, food_a_temp_queue, food_a_temp_message)
+        except ValueError:
+            pass
+          
+        
+        try:
+            food_b_temp_channel3 = float(row[3])
+            fstring_food_b_message = f"[{fstring_time_column}, {food_b_temp_channel3}]"
+            food_b_temp_message = fstring_food_b_message.encode()
+            send_message_to_queue(host, food_b_temp_queue, food_b_temp_message)
+        except ValueError:
+           pass
+       
+        
+    # sleep in seconds
+        time.sleep(30)
+
+###########################################################################################
+            
 # Standard Python idiom to indicate main program entry point
 # This allows us to import this module and use its functions
 # without executing the code below.
 # If this is the program being run, then execute the code below
-if __name__ == "__main__":
-    # call the main function with the information needed
-    main('localhost','01-smoker','02-food-A','02-food-B')
+if __name__ == "__main__":  
+    # ask the user if they'd like to open the RabbitMQ Admin site
+    # setting show_offer for RabbitMQ site to off
+    offer_rabbitmq_admin_site(show_offer)
+   
+    # delete queues to clear old messages
+    delete_queue(host, smoker_temp_queue)
+    delete_queue(host, food_a_temp_queue)
+    delete_queue(host, food_b_temp_queue)
+    
+    get_data_from_csv(data_file)
