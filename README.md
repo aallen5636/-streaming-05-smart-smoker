@@ -1,5 +1,5 @@
 # Name: Ashley Allen
-# streaming-05-smart-smoker
+# A6: Consumers, Windowing, and Multiple Channels
  Design and Implement a producer for the Smart Smoker App
  
 ## Before You Begin
